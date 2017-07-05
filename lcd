@@ -1,0 +1,123 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(12,11,5,4,3,2);
+int h=0,m=0,s=0;
+int resetBtn=6;
+int pauseBtn=7;
+int preTime=0;
+int currTime=0;
+int dpauseTime=0;
+long pauseTime=0;
+int pauseBtnCount=0;
+int prePauseBtnState=LOW;
+int currPauseBtnState=LOW;
+int resetBtnState=LOW;
+long preMillis=0;
+int flag=0;
+int fl=0;
+void setup() {
+lcd.begin(16,2);
+pinMode(resetBtn,INPUT);
+pinMode(pauseBtn,INPUT);
+}
+void tm(){ 
+  if(s<60)
+  {
+    s=(millis()-pauseTime-3600000*h-60000*m-preMillis)/1000;
+  }
+  if(s>=60)
+  {
+    m++;
+    s=0;
+  }
+  if(m>=60)
+  {
+    h++;
+    m=0;
+  }
+}
+void display()
+{
+  lcd.setCursor(1,0);
+  if(h<10)
+  {
+    lcd.print("0");
+  }
+  lcd.print(h);
+  lcd.print(":");
+  if(m<10)
+  {
+    lcd.print("0");
+  }
+  lcd.print(m);
+  lcd.print(":");
+  if(s<10)
+  {
+    lcd.print("0");
+  }
+  lcd.print(s);
+}
+int fpause(){
+  if(currPauseBtnState!=prePauseBtnState)
+  {
+    pauseBtnCount++;
+    prePauseBtnState=currPauseBtnState;
+  }
+  if(pauseBtnCount%4==1)
+  {
+    return 1;
+  }
+  if(pauseBtnCount%4==2)
+  {
+    return 2;
+  }
+  if(pauseBtnCount%4==0||pauseBtnCount%4==3)
+  {
+    return HIGH;
+  }
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+  currPauseBtnState=digitalRead(pauseBtn);
+  resetBtnState=digitalRead(resetBtn);
+ if(resetBtnState==HIGH)
+ {
+    //preMillis=millis();
+    pauseTime=0;
+    m=0;
+    h=0;
+    s=0;
+    fl=1;
+    pauseBtnCount=-2;//^_^
+    display();
+ }
+ if(fpause()==1)
+ {
+  preTime=millis();
+  display();
+ }
+  if(fpause()==2)
+  {
+    dpauseTime=millis()-preTime; 
+    flag=1;   
+  }
+  if(fpause()==HIGH)
+  {
+       if(flag==1)
+       {
+             pauseTime+=dpauseTime;
+             flag=0;
+       }
+   
+       if(fl==1)
+       {
+             preMillis=millis();
+             fl=0;
+             m=0;
+             h=0;
+             s=0;
+             pauseTime=0;
+       }
+        tm();
+        display();
+      }
+}
